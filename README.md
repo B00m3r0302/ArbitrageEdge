@@ -51,8 +51,8 @@ cd arbitrage-edge
 
 ### 2. Set up environment variables
 ```bash
-cp .env.example .env
-# Edit .env with your API keys and configuration
+cp .env_template.example .env_template
+# Edit .env_template with your API keys and configuration
 ```
 
 ### 3. Run with Docker Compose
