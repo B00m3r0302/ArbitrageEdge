@@ -2,14 +2,6 @@
 from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings, NamedTuple
 
-class Sport(NamedTuple):
-    key: str
-    group: str
-    title: str
-    description: str
-    active: bool = False
-    has_outrights: bool = False
-
 class Settings(BaseSettings):
     """
     Application settings
@@ -118,3 +110,20 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+
+class Sport(NamedTuple):
+    key: str
+    group: str
+    title: str
+    description: str
+    active: bool = False
+    has_outrights: bool = False
+
+class Odds(NamedTuple):
+    sport: str = "upcoming"
+    api_key: str = Settings.odds_api_key
+    regions: str = "us"
+    markets: str
+    dateFormat: str = "iso"
+    oddsFormat: str = "decimal"
+    eventIds
