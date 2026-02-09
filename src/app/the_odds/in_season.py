@@ -16,3 +16,5 @@ def get_in_season_sports():
     for sport in response.json():
         if sport["key"] in sports:
              print(sport["key"])
+
+def get_sport_events():
