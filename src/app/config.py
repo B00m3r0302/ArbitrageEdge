@@ -100,6 +100,7 @@ class Sports(Enum):
     tennis_wta_us_open = "tennis_wta_us_open"
     tennis_wta_wimbledon = "tennis_wta_wimbledon"
     tennis_wta_wuhan_open = "tennis_wta_wuhan_open"
+    upcoming = "upcoming"
 
 class Settings(BaseSettings):
     """
@@ -126,6 +127,7 @@ class Settings(BaseSettings):
 settings = Settings()
 
 class Sport(BaseModel):
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
     key: Sports = Field(..., alias="sport")
     group: str = Field(..., alias="group")
     title: str = Field(..., alias="title")
@@ -143,13 +145,13 @@ class Sport(BaseModel):
 
 
 class Odds(BaseModel):
-    sport: str = Field(default="upcoming")
+    sport: Sports = Field(..., alias="sport")
     api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
-    regions: str = Field(default="us", alias="region")
+    regions: list[str] = Field(default="us", alias="region")
     markets: Optional[str] = Field(default = "")
-    dateFormat: Optional[str] = Field(default = "iso", alias="date_format", repr=False)
+    dateFormat: Optional[list[str]] = Field(default = "iso", alias="date_format", repr=False)
     oddsFormat: Optional[str] = Field(default = "", alias="odds_format", repr=False)
-    eventIds: Optional[str] = Field(default = "", alias="event_id", repr=False)
+    eventIds: Optional[list[str]] = Field(default = "", alias="event_id", repr=False)
     bookmakers: Optional[str] = Field(default = "", alias="bookmaker", repr=False)
     commenceTimeFrom: Optional[str] = Field(default = "", repr=False)
     commenceTimeTo: Optional[str] = Field(default = "", repr=False)
@@ -158,10 +160,20 @@ class Odds(BaseModel):
     includeBetLimits: Optional[bool] = Field(default = False, repr=False)
     includeRotationNumbers: Optional[bool] = Field(default = False, repr=False)
 
-class Scores(BaseModel):
-    sport: str = "upcoming"
-    daysFrom: Optional[int] = Field(default=None, ge=1, le=3)
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
 
+class Scores(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    daysFrom: Optional[int] = Field(default=None, ge=1, le=3)
+    dateFormat: Optional[list[str]] = Field(default = "iso", alias="date_format", repr=False)
+    eventIds: Optional[list[str]] = Field(default = "", alias="event_id", repr=False)
 
     @field_validator("daysFrom")
     @classmethod
@@ -170,3 +182,143 @@ class Scores(BaseModel):
             raise ValueError("daysFrom must be between 1 and 3")
 
         return daysFrom
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class Events(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    dateFormat: Optional[list[str]] = Field(default = "iso", alias="date_format", repr=False)
+    eventIds: Optional[list[str]] = Field(default = "", alias="event_id", repr=False)
+    commenceTimeFrom: Optional[str] = Field(default = "", repr=False)
+    commenceTimeTo: Optional[str] = Field(default = "", repr=False)
+    includeRotationNumbers: Optional[bool] = Field(default = False, repr=False)
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class EventOdds(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    regions: list[str] = Field(default="us", alias="region")
+    markets: Optional[str] = Field(default="")
+    dateFormat: Optional[list[str]] = Field(default="iso", alias="date_format", repr=False)
+    oddsFormat: Optional[str] = Field(default="", alias="odds_format", repr=False)
+    eventId: str = Field(..., alias="event_id")
+    bookmakers: Optional[str] = Field(default="", alias="bookmaker", repr=False)
+    commenceTimeFrom: Optional[str] = Field(default="", repr=False)
+    commenceTimeTo: Optional[str] = Field(default="", repr=False)
+    includeLinks: Optional[bool] = Field(default=False, repr=False)
+    includeSids: Optional[bool] = Field(default=False, repr=False)
+    includeBetLimits: Optional[bool] = Field(default=False, repr=False)
+    includeRotationNumbers: Optional[bool] = Field(default=False, repr=False)
+    includeMultipliers: Optional[bool] = Field(default=False, repr=False)
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class EventMarkets(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    eventId: str = Field(..., alias="event_id")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    regions: list[str] = Field(default="us", alias="region")
+    bookmakers: Optional[str] = Field(default="", alias="bookmaker", repr=False)
+    dateFormat: Optional[list[str]] = Field(default="iso", alias="date_format", repr=False)
+
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class Participants(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class HistoricalOdds(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    regions: list[str] = Field(default="us", alias="region")
+    markets: Optional[str] = Field(default="")
+    dateFormat: Optional[list[str]] = Field(default="iso", alias="date_format", repr=False)
+    oddsFormat: Optional[str] = Field(default="", alias="odds_format", repr=False)
+    eventIds: Optional[list[str]] = Field(default="", alias="event_id", repr=False)
+    bookmakers: Optional[str] = Field(default="", alias="bookmaker", repr=False)
+    commenceTimeFrom: Optional[str] = Field(default="", repr=False)
+    commenceTimeTo: Optional[str] = Field(default="", repr=False)
+    includeLinks: Optional[bool] = Field(default=False, repr=False)
+    includeSids: Optional[bool] = Field(default=False, repr=False)
+    includeBetLimits: Optional[bool] = Field(default=False, repr=False)
+    includeRotationNumbers: Optional[bool] = Field(default=False, repr=False)
+    date: str = Field(..., alias="date")
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class HistoricalEvents(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    date: str = Field(..., alias="date")
+    dateFormat: Optional[list[str]] = Field(default="iso", alias="date_format", repr=False)
+    eventIds: Optional[list[str]] = Field(default="", alias="event_id", repr=False)
+    commenceTimeFrom: Optional[str] = Field(default="", repr=False)
+    commenceTimeTo: Optional[str] = Field(default="", repr=False)
+    includeRotationNumbers: Optional[bool] = Field(default=False, repr=False)
+
+    @model_validator(mode="before")
+    def set_sport_from_enum(cls, values: dict) -> dict:
+        # If someone passed a Sport instance, replace it with its key
+        sport = values.get("sport")
+        if isinstance(sport, Sport):
+            values["sport"] = sport.key.value
+        return values
+
+class HistoricalEventOdds(BaseModel):
+    sport: Sports = Field(..., alias="sport")
+    api_key: str = Field(default=settings.odds_api_key, frozen=True, repr=False)
+    regions: list[str] = Field(default="us", alias="region")
+    eventId: str = Field(..., alias="event_id")
+    date: str = Field(..., alias="date")
+    markets: Optional[str] = Field(default="")
+    dateFormat: Optional[list[str]] = Field(default="iso", alias="date_format", repr=False)
+    oddsFormat: Optional[str] = Field(default="", alias="odds_format", repr=False)
+    bookmakers: Optional[str] = Field(default="", alias="bookmaker", repr=False)
+    commenceTimeFrom: Optional[str] = Field(default="", repr=False)
+    commenceTimeTo: Optional[str] = Field(default="", repr=False)
+    includeLinks: Optional[bool] = Field(default=False, repr=False)
+    includeSids: Optional[bool] = Field(default=False, repr=False)
+    includeBetLimits: Optional[bool] = Field(default=False, repr=False)
+    includeRotationNumbers: Optional[bool] = Field(default=False, repr=False)
+    includeMultipliers: Optional[bool] = Field(default=False, repr=False)
